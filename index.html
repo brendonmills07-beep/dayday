@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>DayDay — Post smarter. Sell faster.</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --green: #1D9E75;
@@ -52,7 +54,7 @@
   .landing-login span { color: rgba(255,255,255,0.7); text-decoration: underline; }
 
   /* SHARED */
-  .app-wrap { max-width: 520px; margin: 0 auto; padding: 1.5rem 1rem 5rem; }
+  .app-wrap { max-width: 520px; margin: 0 auto; padding: 1.5rem 1rem 8rem; }
   .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
   .logo { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.5px; cursor: pointer; }
   .logo span { color: var(--green); }
@@ -140,7 +142,7 @@
   .chk.on .chk-mark { display: block; }
   .red-tag { font-size: 10px; font-weight: 500; background: var(--red-light); color: var(--red); border-radius: 4px; padding: 2px 6px; margin-top: 3px; display: inline-block; }
   .orange-tag { font-size: 10px; font-weight: 500; background: var(--orange-light); color: var(--orange); border-radius: 4px; padding: 2px 6px; margin-top: 3px; display: inline-block; }
-  .sticky { position: sticky; bottom: 0; background: var(--bg); border-top: 0.5px solid var(--border); padding: 1rem 0 0.5rem; }
+  .sticky { position: fixed; bottom: 56px; left: 0; right: 0; max-width: 520px; margin: 0 auto; background: var(--bg); border-top: 0.5px solid var(--border); padding: 1rem 1rem 0.75rem; z-index: 100; }
 
   /* PHOTOS */
   .veh-header { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
@@ -212,8 +214,8 @@
       <div class="landing-feat"><div class="feat-dot"></div><div class="feat-text">Color-coded inventory — green, orange, red at a glance</div></div>
       <div class="landing-feat"><div class="feat-dot"></div><div class="feat-text">Auto-flags sold vehicles still live on Facebook</div></div>
     </div>
-    <button class="landing-btn" onclick="go('s-onboard')">Get started free</button>
-    <div class="landing-login">Already have an account? <span onclick="go('s-setup')">Sign in</span></div>
+    <button class="landing-btn" onclick="go('s-signup')">Get started free</button>
+    <div class="landing-login">Already have an account? <span onclick="go('s-login')">Sign in</span></div>
   </div>
 </div>
 
@@ -221,7 +223,7 @@
 <div class="screen" id="s-onboard">
   <div class="app-wrap">
     <div class="topbar">
-      <div class="logo" onclick="go('s-landing')">Day<span>Day</span></div>
+      <div class="logo" onclick="signOut()">Day<span>Day</span></div>
     </div>
     <div class="step-indicator">
       <div class="step-dot active" id="ob0"></div>
@@ -282,7 +284,7 @@
         <div class="success-title">You're all set</div>
         <div class="success-sub">DayDay is ready. Your settings are saved and will pre-load every time you post.</div>
         <div class="summary-box" id="ob-summary"></div>
-        <button class="primary-btn" onclick="go('s-setup')">Start posting ›</button>
+        <button class="primary-btn" onclick="go('s-login')">Start posting ›</button>
       </div>
     </div>
   </div>
@@ -335,7 +337,7 @@
   <div class="app-wrap">
     <div class="topbar">
       <div class="logo">Day<span>Day</span></div>
-      <div class="back-btn" onclick="go('s-setup')">‹ Setup</div>
+      <div class="back-btn" onclick="go('s-login')">‹ Setup</div>
     </div>
     <div class="legend">
       <div class="leg-item"><div class="leg-dot" style="background:#639922"></div>Never posted</div>
@@ -457,7 +459,58 @@
     </div>
     <div class="settings-section">
       <div class="settings-title">Danger zone</div>
-      <button class="danger-btn" onclick="go('s-landing')">Sign out</button>
+      <button class="danger-btn" onclick="signOut()">Sign out</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- SIGNUP -->
+<div class="screen" id="s-signup">
+  <div style="background:#0a0a0a;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem;">
+    <div style="width:100%;max-width:400px;">
+      <div style="font-size:28px;font-weight:600;color:#fff;letter-spacing:-1px;margin-bottom:4px;text-align:center;">Day<span style="color:#1D9E75">Day</span></div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:2rem;">Create your free account</div>
+      <div style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:14px;padding:1.5rem;">
+        <div class="field" style="margin-bottom:12px;">
+          <label style="color:rgba(255,255,255,0.5);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Dealership name</label>
+          <input type="text" id="auth-name" placeholder="City Auto Mitsubishi" style="width:100%;padding:10px 12px;border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:14px;font-family:var(--font);background:rgba(255,255,255,0.08);color:#fff;"/>
+        </div>
+        <div class="field" style="margin-bottom:12px;">
+          <label style="color:rgba(255,255,255,0.5);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Email</label>
+          <input type="email" id="auth-email" placeholder="you@dealership.com" style="width:100%;padding:10px 12px;border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:14px;font-family:var(--font);background:rgba(255,255,255,0.08);color:#fff;"/>
+        </div>
+        <div class="field" style="margin-bottom:16px;">
+          <label style="color:rgba(255,255,255,0.5);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Password</label>
+          <input type="password" id="auth-password" placeholder="Min 6 characters" style="width:100%;padding:10px 12px;border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:14px;font-family:var(--font);background:rgba(255,255,255,0.08);color:#fff;"/>
+        </div>
+        <div id="auth-error" style="display:none;background:#FCEBEB;color:#A32D2D;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:12px;"></div>
+        <button id="signup-btn" onclick="signUp()" style="width:100%;padding:13px;background:#1D9E75;color:white;border:none;border-radius:10px;font-size:15px;font-weight:500;font-family:var(--font);cursor:pointer;">Create account</button>
+      </div>
+      <div style="text-align:center;margin-top:16px;font-size:13px;color:rgba(255,255,255,0.4);">Already have an account? <span style="color:rgba(255,255,255,0.7);cursor:pointer;text-decoration:underline;" onclick="go('s-login')">Sign in</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="screen" id="s-login">
+  <div style="background:#0a0a0a;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem;">
+    <div style="width:100%;max-width:400px;">
+      <div style="font-size:28px;font-weight:600;color:#fff;letter-spacing:-1px;margin-bottom:4px;text-align:center;">Day<span style="color:#1D9E75">Day</span></div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:2rem;">Sign in to your account</div>
+      <div style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:14px;padding:1.5rem;">
+        <div class="field" style="margin-bottom:12px;">
+          <label style="color:rgba(255,255,255,0.5);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Email</label>
+          <input type="email" id="login-email" placeholder="you@dealership.com" style="width:100%;padding:10px 12px;border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:14px;font-family:var(--font);background:rgba(255,255,255,0.08);color:#fff;"/>
+        </div>
+        <div class="field" style="margin-bottom:16px;">
+          <label style="color:rgba(255,255,255,0.5);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Password</label>
+          <input type="password" id="login-password" placeholder="Your password" style="width:100%;padding:10px 12px;border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:14px;font-family:var(--font);background:rgba(255,255,255,0.08);color:#fff;"/>
+        </div>
+        <div id="login-error" style="display:none;background:#FCEBEB;color:#A32D2D;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:12px;"></div>
+        <button id="login-btn" onclick="signIn()" style="width:100%;padding:13px;background:#1D9E75;color:white;border:none;border-radius:10px;font-size:15px;font-weight:500;font-family:var(--font);cursor:pointer;">Sign in</button>
+      </div>
+      <div style="text-align:center;margin-top:16px;font-size:13px;color:rgba(255,255,255,0.4);">Don't have an account? <span style="color:rgba(255,255,255,0.7);cursor:pointer;text-decoration:underline;" onclick="go('s-signup')">Create one free</span></div>
     </div>
   </div>
 </div>
@@ -482,7 +535,7 @@
 
 <script>
 const emojiMap={'0':'0️⃣','1':'1️⃣','2':'2️⃣','3':'3️⃣','4':'4️⃣','5':'5️⃣','6':'6️⃣','7':'7️⃣','8':'8️⃣','9':'9️⃣'};
-const noNavScreens=['s-landing','s-onboard'];
+const noNavScreens=['s-landing','s-onboard','s-signup','s-login'];
 const navScreenMap={'s-setup':'nav-post','s-inventory':'nav-inv','s-photos':'nav-inv','s-posting':'nav-post','s-settings':'nav-set'};
 
 function go(id) {
@@ -712,6 +765,75 @@ function showSaved(){
 }
 
 renderInventory();
+
+// SUPABASE AUTH
+const SUPABASE_URL = 'https://ltnjgxjvimtxwwukbnsb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_rbkxYgPmw3gvL-rJ0enkOQ_8AoNgdv8';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+
+async function checkAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    go('s-setup');
+  }
+}
+
+async function signUp() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const name = document.getElementById('auth-name').value.trim();
+  if (!email || !password || !name) { showAuthError('Please fill in all fields'); return; }
+  if (password.length < 6) { showAuthError('Password must be at least 6 characters'); return; }
+  showAuthLoading(true);
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { dealership_name: name } } });
+  showAuthLoading(false);
+  if (error) { showAuthError(error.message); return; }
+  currentUser = data.user;
+  go('s-onboard');
+}
+
+async function signIn() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) { showLoginError('Please enter your email and password'); return; }
+  showLoginLoading(true);
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  showLoginLoading(false);
+  if (error) { showLoginError('Invalid email or password'); return; }
+  currentUser = data.user;
+  go('s-setup');
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  currentUser = null;
+  go('s-landing');
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function showAuthLoading(on) {
+  document.getElementById('signup-btn').textContent = on ? 'Creating account...' : 'Create account';
+  document.getElementById('signup-btn').disabled = on;
+}
+function showLoginLoading(on) {
+  document.getElementById('login-btn').textContent = on ? 'Signing in...' : 'Sign in';
+  document.getElementById('login-btn').disabled = on;
+}
+
+checkAuth();
+
 </script>
 </body>
 </html>
