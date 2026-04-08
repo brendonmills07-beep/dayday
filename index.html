@@ -799,10 +799,94 @@ function startPosting(){
 }
 
 // SETTINGS
-function showSaved(){
+async function showSaved(){
+  const dealer = document.getElementById('set-dealer')?.value || '';
+  const consultant = document.getElementById('set-consultant')?.value || '';
+  const phone = document.getElementById('set-phone')?.value || '';
+  const preset = document.getElementById('set-preset')?.value || '';
+  const api = document.getElementById('set-api')?.value || '';
+
+  // Save to localStorage as backup
+  const settings = { dealer, consultant, phone, preset, api };
+  localStorage.setItem('dayday_settings', JSON.stringify(settings));
+
+  // Save to Supabase if logged in
+  if (currentUser) {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        await fetch('https://ltnjgxjvimtxwwukbnsb.supabase.co/rest/v1/dealer_settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0bmpneGp2aW10eHd3dWtibnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDM0NTIsImV4cCI6MjA5MDU3OTQ1Mn0.De9nk6JPfzLgZWRSCoAM9KEQh30z5bQ-8E6anG2gA2E',
+            'Authorization': 'Bearer ' + session.access_token,
+            'Prefer': 'resolution=merge-duplicates,return=minimal'
+          },
+          body: JSON.stringify({
+            user_id: currentUser.id,
+            dealer_name: dealer,
+            consultant_name: consultant,
+            phone: phone,
+            preset_description: preset,
+            inventory_feed_url: api
+          })
+        });
+      }
+    } catch(e) { console.error('Save error:', e); }
+  }
+
+  // Update setup screen with saved values
+  const setupPhone = document.getElementById('setup-phone');
+  const setupDesc = document.getElementById('setup-desc');
+  if (setupPhone && phone) { setupPhone.value = phone; updateEmoji('setup-phone','setup-emoji'); }
+  if (setupDesc && preset) setupDesc.value = preset;
+
   const t=document.getElementById('saved-toast');
   t.style.display='inline';
   setTimeout(()=>t.style.display='none',2000);
+}
+
+async function loadSavedSettings() {
+  // Try Supabase first
+  if (currentUser) {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        const res = await fetch(`https://ltnjgxjvimtxwwukbnsb.supabase.co/rest/v1/dealer_settings?user_id=eq.${currentUser.id}&limit=1`, {
+          headers: {
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0bmpneGp2aW10eHd3dWtibnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDM0NTIsImV4cCI6MjA5MDU3OTQ1Mn0.De9nk6JPfzLgZWRSCoAM9KEQh30z5bQ-8E6anG2gA2E',
+            'Authorization': 'Bearer ' + session.access_token
+          }
+        });
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const s = data[0];
+          if (document.getElementById('set-dealer')) document.getElementById('set-dealer').value = s.dealer_name || '';
+          if (document.getElementById('set-consultant')) document.getElementById('set-consultant').value = s.consultant_name || '';
+          if (document.getElementById('set-phone')) { document.getElementById('set-phone').value = s.phone || ''; updateEmoji('set-phone','set-emoji'); }
+          if (document.getElementById('set-preset')) document.getElementById('set-preset').value = s.preset_description || '';
+          if (document.getElementById('set-api')) document.getElementById('set-api').value = s.inventory_feed_url || '';
+          // Pre-fill setup screen
+          if (s.phone && document.getElementById('setup-phone')) { document.getElementById('setup-phone').value = s.phone; updateEmoji('setup-phone','setup-emoji'); }
+          if (s.preset_description && document.getElementById('setup-desc')) document.getElementById('setup-desc').value = s.preset_description;
+          return;
+        }
+      }
+    } catch(e) { console.error('Load settings error:', e); }
+  }
+  // Fallback to localStorage
+  const stored = localStorage.getItem('dayday_settings');
+  if (stored) {
+    const s = JSON.parse(stored);
+    if (document.getElementById('set-dealer')) document.getElementById('set-dealer').value = s.dealer || '';
+    if (document.getElementById('set-consultant')) document.getElementById('set-consultant').value = s.consultant || '';
+    if (document.getElementById('set-phone')) { document.getElementById('set-phone').value = s.phone || ''; updateEmoji('set-phone','set-emoji'); }
+    if (document.getElementById('set-preset')) document.getElementById('set-preset').value = s.preset || '';
+    if (document.getElementById('set-api')) document.getElementById('set-api').value = s.api || '';
+    if (s.phone && document.getElementById('setup-phone')) { document.getElementById('setup-phone').value = s.phone; updateEmoji('setup-phone','setup-emoji'); }
+    if (s.preset && document.getElementById('setup-desc')) document.getElementById('setup-desc').value = s.preset;
+  }
 }
 
 renderInventory();
@@ -850,7 +934,7 @@ async function checkAuth() {
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
     currentUser = session.user;
-    go('s-setup');
+    go('s-setup'); loadSavedSettings();
   }
 }
 
