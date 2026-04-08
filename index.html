@@ -558,7 +558,7 @@ function go(id) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(navScreenMap[id]) document.getElementById(navScreenMap[id])?.classList.add('active');
   window.scrollTo(0,0);
-  if(id==='s-inventory') renderInventory();
+  if(id==='s-inventory') loadRealInventory();
   if(id==='s-photos') renderPhotos();
   if(id==='s-posting') startPosting();
 }
@@ -621,20 +621,45 @@ function setDescTab(type, el) {
 }
 
 // INVENTORY
-const vehicles=[
-  {id:1,name:'2022 Toyota Corolla',stock:'221043',miles:'39,850',price:'$21,550',status:'green',icon:'🚗'},
-  {id:2,name:'2023 Jeep Wrangler 4xe',stock:'231102',miles:'44,268',price:'$24,770',status:'green',icon:'🚙'},
-  {id:3,name:'2021 Chevrolet Colorado',stock:'215588',miles:'78,744',price:'$17,980',status:'green',icon:'🛻'},
-  {id:4,name:'2026 Mitsubishi Outlander',stock:'260016',miles:'12',price:'$34,608',status:'green',icon:'🚘'},
-  {id:5,name:'2023 GMC Yukon',stock:'233313',miles:'44,268',price:'$51,990',status:'orange',icon:'🚙'},
-  {id:6,name:'2018 Honda Ridgeline',stock:'182384',miles:'49,519',price:'$23,770',status:'orange',icon:'🛻'},
-  {id:7,name:'2019 Honda Passport',stock:'190544',miles:'70,611',price:'$21,092',status:'orange',icon:'🚗'},
-  {id:8,name:'2015 Ford F-350',stock:'153761',miles:'39,542',price:'$27,611',status:'orange',icon:'🛻'},
-  {id:9,name:'2019 Tesla Model 3',stock:'515498',miles:'94,174',price:'$19,440',status:'red',icon:'🚗'},
-  {id:10,name:'2020 Toyota Camry',stock:'207476',miles:'66,069',price:'$21,457',status:'red',icon:'🚗'},
-];
+const INVENTORY_API = 'https://dayday-server-production.up.railway.app/inventory';
+let vehicles = [];
 let selected=new Set();
 let curFilter='all';
+
+async function loadRealInventory() {
+  // Show loading state
+  const list = document.getElementById('inv-list');
+  if (list) list.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-secondary);font-size:14px;">Loading inventory...</div>';
+
+  try {
+    // Get API key from dealer settings
+    const dealerApiKey = settings?.inventoryKey || 'dd_live_CITYAUTO_sk_9x2mK8pL';
+    const res = await fetch(INVENTORY_API, {
+      headers: { 'x-api-key': dealerApiKey }
+    });
+    const data = await res.json();
+    if (data.success && data.vehicles) {
+      // Map API vehicles to DayDay format
+      vehicles = data.vehicles.map(v => ({
+        id: v.id,
+        name: v.name,
+        stock: v.stock,
+        vin: v.vin,
+        miles: v.miles,
+        price: v.price,
+        image: v.image || '',
+        images: v.images || [],
+        status: 'green', // Default all to green — will update from posting history
+        icon: '🚗'
+      }));
+      renderInventory();
+    }
+  } catch(err) {
+    console.error('Failed to load inventory:', err);
+    if (list) list.innerHTML = '<div style="text-align:center;padding:2rem;color:#A32D2D;font-size:14px;">Failed to load inventory. Check your connection.</div>';
+  }
+}
+
 const statusColors={green:'#639922',orange:'#BA7517',red:'#A32D2D'};
 
 function renderInventory(){
