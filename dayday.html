@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DayDay — Post smarter. Sell faster.</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --green: #1D9E75;
+    --green-dark: #0F6E56;
+    --green-light: #E1F5EE;
+    --green-mid: #639922;
+    --green-pale: #EAF3DE;
+    --orange: #BA7517;
+    --orange-light: #FAEEDA;
+    --red: #A32D2D;
+    --red-light: #FCEBEB;
+    --red-border: #F09595;
+    --purple-light: #EEEDFE;
+    --purple: #534AB7;
+    --text: #1a1a1a;
+    --text-secondary: #6b7280;
+    --text-hint: #9ca3af;
+    --bg: #f8f7f4;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.1);
+    --border-strong: rgba(0,0,0,0.18);
+    --radius: 10px;
+    --radius-lg: 14px;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: block; }
+
+  /* LANDING */
+  .landing { background: #0a0a0a; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem; text-align: center; }
+  .landing-logo { font-size: 52px; font-weight: 600; color: #fff; letter-spacing: -2px; margin-bottom: 8px; }
+  .landing-logo span { color: var(--green); }
+  .landing-tag { font-size: 16px; color: rgba(255,255,255,0.5); margin-bottom: 2.5rem; letter-spacing: 0.02em; }
+  .landing-features { display: flex; flex-direction: column; gap: 10px; margin-bottom: 2.5rem; max-width: 340px; }
+  .landing-feat { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.1); border-radius: var(--radius); padding: 12px 16px; text-align: left; }
+  .feat-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .feat-text { font-size: 14px; color: rgba(255,255,255,0.75); }
+  .landing-btn { background: var(--green); color: white; border: none; border-radius: var(--radius); padding: 15px 40px; font-size: 16px; font-weight: 500; font-family: var(--font); cursor: pointer; transition: background 0.15s; margin-bottom: 12px; }
+  .landing-btn:hover { background: var(--green-dark); }
+  .landing-login { font-size: 13px; color: rgba(255,255,255,0.4); cursor: pointer; }
+  .landing-login span { color: rgba(255,255,255,0.7); text-decoration: underline; }
+
+  /* SHARED */
+  .app-wrap { max-width: 520px; margin: 0 auto; padding: 1.5rem 1rem 8rem; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .logo { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.5px; cursor: pointer; }
+  .logo span { color: var(--green); }
+  .back-btn { font-size: 13px; color: var(--text-secondary); cursor: pointer; border: 0.5px solid var(--border-strong); border-radius: var(--radius); padding: 6px 12px; background: var(--surface); transition: all 0.15s; }
+  .back-btn:hover { color: var(--text); }
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+  .card-title { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+  .card-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 11px; font-weight: 500; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .field input, .field textarea, .field select { width: 100%; padding: 10px 12px; border: 0.5px solid var(--border-strong); border-radius: var(--radius); font-size: 14px; font-family: var(--font); background: var(--bg); color: var(--text); transition: border-color 0.15s; }
+  .field input:focus, .field textarea:focus { outline: none; border-color: var(--green); }
+  .field textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
+  .helper { font-size: 12px; color: var(--text-hint); margin-top: 5px; line-height: 1.5; }
+  .primary-btn { width: 100%; padding: 14px; background: var(--green); color: white; border: none; border-radius: var(--radius); font-size: 15px; font-weight: 500; font-family: var(--font); cursor: pointer; transition: background 0.15s; }
+  .primary-btn:hover { background: var(--green-dark); }
+  .primary-btn:disabled { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
+  .section-label { font-size: 11px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+
+  /* ONBOARDING */
+  .step-indicator { display: flex; align-items: center; gap: 6px; margin-bottom: 1.5rem; }
+  .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong); transition: all 0.2s; }
+  .step-dot.active { background: var(--green); }
+  .step-dot.done { background: var(--green-mid); }
+  .step-lbl { font-size: 12px; color: var(--text-secondary); margin-left: 4px; }
+  .phone-wrap { display: flex; gap: 8px; align-items: flex-start; }
+  .phone-wrap .field { flex: 1; margin-bottom: 0; }
+  .emoji-box { background: var(--bg); border: 0.5px solid var(--border-strong); border-radius: var(--radius); padding: 10px 8px; font-size: 12px; min-width: 120px; text-align: center; margin-top: 22px; color: var(--text); word-break: break-all; line-height: 1.6; }
+  .api-row { display: flex; gap: 8px; align-items: flex-end; }
+  .api-row .field { flex: 1; margin-bottom: 0; }
+  .test-btn { padding: 10px 14px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: var(--surface); font-size: 13px; font-weight: 500; font-family: var(--font); color: var(--text-secondary); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+  .test-btn:hover { color: var(--text); }
+  .api-status { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-top: 8px; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong); }
+  .status-dot.on { background: var(--green-mid); }
+  .success-wrap { text-align: center; padding: 2rem 1rem; }
+  .success-circle { width: 60px; height: 60px; border-radius: 50%; background: var(--green-light); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+  .check-circle { width: 32px; height: 32px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; }
+  .success-title { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .success-sub { font-size: 14px; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6; }
+  .summary-box { background: var(--bg); border-radius: var(--radius); padding: 1rem; text-align: left; margin-bottom: 1.5rem; }
+  .sum-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 0.5px solid var(--border); }
+  .sum-row:last-child { border-bottom: none; }
+  .sum-row span:first-child { color: var(--text-secondary); }
+  .sum-row span:last-child { font-weight: 500; }
+
+  /* SETUP */
+  .desc-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .desc-tab { flex: 1; padding: 9px 6px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: var(--bg); font-size: 12px; font-weight: 500; font-family: var(--font); color: var(--text-secondary); cursor: pointer; text-align: center; transition: all 0.15s; }
+  .desc-tab.active { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+  .ai-badge { display: inline-block; font-size: 9px; font-weight: 500; background: var(--purple-light); color: var(--purple); border-radius: 4px; padding: 1px 5px; margin-left: 3px; vertical-align: middle; }
+  .info-preview { background: var(--bg); border: 0.5px solid var(--border-strong); border-radius: var(--radius); padding: 12px; font-size: 13px; color: var(--text-secondary); line-height: 1.8; }
+  .ai-note { background: var(--purple-light); border: 0.5px solid #AFA9EC; border-radius: var(--radius); padding: 12px; font-size: 13px; color: #3C3489; line-height: 1.6; }
+  .platform-row { display: flex; gap: 8px; }
+  .plat-btn { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: var(--bg); font-size: 13px; font-weight: 500; font-family: var(--font); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+  .plat-btn.active { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+  .fb-dot { width: 10px; height: 10px; border-radius: 50%; background: #1877F2; }
+
+  /* INVENTORY */
+  .legend { display: flex; gap: 14px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .leg-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-secondary); }
+  .leg-dot { width: 9px; height: 9px; border-radius: 50%; }
+  .filter-row { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .filt-btn { padding: 6px 14px; border-radius: 20px; border: 0.5px solid var(--border-strong); background: var(--surface); font-size: 12px; font-weight: 500; font-family: var(--font); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+  .filt-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
+  .select-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .sel-all { font-size: 12px; color: var(--green); font-weight: 500; cursor: pointer; }
+  .sel-count { font-size: 12px; color: var(--text-secondary); }
+  .veh-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; }
+  .veh-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: border-color 0.15s; }
+  .veh-card:hover { border-color: var(--border-strong); }
+  .veh-card.selected { border-color: var(--green); background: #f0faf6; }
+  .veh-card.no-select { cursor: default; }
+  .status-bar { width: 4px; height: 46px; border-radius: 4px; flex-shrink: 0; }
+  .thumb { width: 58px; height: 46px; border-radius: 8px; background: var(--bg); border: 0.5px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .veh-info { flex: 1; min-width: 0; }
+  .veh-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .veh-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .veh-right { text-align: right; flex-shrink: 0; }
+  .veh-price { font-size: 14px; font-weight: 500; }
+  .veh-miles { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .chk { width: 20px; height: 20px; border-radius: 50%; border: 0.5px solid var(--border-strong); background: var(--bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+  .chk.on { background: var(--green); border-color: var(--green); }
+  .chk-mark { color: white; font-size: 11px; font-weight: 600; display: none; }
+  .chk.on .chk-mark { display: block; }
+  .red-tag { font-size: 10px; font-weight: 500; background: var(--red-light); color: var(--red); border-radius: 4px; padding: 2px 6px; margin-top: 3px; display: inline-block; }
+  .orange-tag { font-size: 10px; font-weight: 500; background: var(--orange-light); color: var(--orange); border-radius: 4px; padding: 2px 6px; margin-top: 3px; display: inline-block; }
+  .sticky { position: fixed; bottom: 56px; left: 0; right: 0; max-width: 520px; margin: 0 auto; background: var(--bg); border-top: 0.5px solid var(--border); padding: 1rem 1rem 0.75rem; z-index: 100; }
+
+  /* PHOTOS */
+  .veh-header { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+  .veh-header-title { font-size: 15px; font-weight: 500; }
+  .veh-header-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .warn-box { background: var(--red-light); border: 0.5px solid var(--red-border); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 1rem; font-size: 13px; color: #791F1F; line-height: 1.5; }
+  .warn-title { font-weight: 500; margin-bottom: 2px; }
+  .photo-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-bottom: 1rem; }
+  .photo-card { position: relative; border-radius: var(--radius); overflow: hidden; border: 0.5px solid var(--border); background: var(--bg); aspect-ratio: 4/3; }
+  .photo-card.bad { border-color: var(--red); }
+  .photo-inner { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .photo-inner.natural { background: #d4e8c2; }
+  .photo-inner.branded { background: #e8e4e4; }
+  .del-btn { position: absolute; top: 5px; right: 5px; width: 22px; height: 22px; border-radius: 50%; background: var(--red); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 600; line-height: 1; font-family: var(--font); }
+  .photo-badge { position: absolute; bottom: 5px; left: 5px; font-size: 10px; font-weight: 500; border-radius: 4px; padding: 2px 5px; }
+  .badge-clean { background: var(--green-pale); color: #3B6D11; }
+  .badge-flag { background: var(--red-light); color: var(--red); border: 0.5px solid var(--red-border); }
+  .badge-cover { position: absolute; top: 5px; left: 5px; background: var(--green-light); color: var(--green-dark); font-size: 10px; font-weight: 500; border-radius: 4px; padding: 2px 5px; }
+  .upload-tile { border: 1px dashed var(--border-strong); border-radius: var(--radius); aspect-ratio: 4/3; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: var(--surface); gap: 6px; transition: border-color 0.15s; }
+  .upload-tile:hover { border-color: var(--green); }
+  .upload-plus { width: 26px; height: 26px; border-radius: 50%; background: var(--bg); border: 0.5px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-secondary); line-height: 1; }
+  .upload-lbl { font-size: 11px; color: var(--text-secondary); }
+
+  /* POSTING PROGRESS */
+  .progress-wrap { padding: 2rem 0; }
+  .prog-header { text-align: center; margin-bottom: 2rem; }
+  .prog-title { font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+  .prog-sub { font-size: 14px; color: var(--text-secondary); }
+  .prog-bar-wrap { background: var(--bg); border-radius: 20px; height: 6px; margin-bottom: 2rem; overflow: hidden; border: 0.5px solid var(--border); }
+  .prog-bar-fill { height: 100%; background: var(--green); border-radius: 20px; transition: width 0.5s ease; }
+  .post-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
+  .post-item { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+  .post-status-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; }
+  .post-status-icon.done { background: var(--green-light); }
+  .post-status-icon.pending { background: var(--bg); border: 0.5px solid var(--border-strong); }
+  .post-status-icon.posting { background: var(--orange-light); }
+  .post-item-name { flex: 1; font-size: 14px; font-weight: 500; }
+  .post-item-status { font-size: 12px; color: var(--text-secondary); }
+  .post-item-status.done { color: var(--green-dark); }
+  .post-item-status.posting { color: var(--orange); }
+  .post-done-card { background: var(--green-light); border: 0.5px solid var(--green); border-radius: var(--radius-lg); padding: 1.25rem; text-align: center; margin-bottom: 1rem; }
+  .post-done-title { font-size: 16px; font-weight: 500; color: var(--green-dark); margin-bottom: 4px; }
+  .post-done-sub { font-size: 13px; color: var(--green-dark); opacity: 0.8; }
+
+  /* SETTINGS */
+  .settings-section { margin-bottom: 1.5rem; }
+  .settings-title { font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 0.5px solid var(--border); }
+  .save-btn { background: var(--green); color: white; border: none; border-radius: var(--radius); padding: 10px 20px; font-size: 14px; font-weight: 500; font-family: var(--font); cursor: pointer; transition: background 0.15s; }
+  .save-btn:hover { background: var(--green-dark); }
+  .saved-toast { display: none; font-size: 13px; color: var(--green-dark); font-weight: 500; margin-left: 10px; }
+  .danger-btn { background: var(--red-light); color: var(--red); border: 0.5px solid var(--red-border); border-radius: var(--radius); padding: 10px 20px; font-size: 14px; font-weight: 500; font-family: var(--font); cursor: pointer; }
+  .nav-bar { display: flex; background: var(--surface); border-top: 0.5px solid var(--border); position: fixed; bottom: 0; left: 0; right: 0; max-width: 520px; margin: 0 auto; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 0 8px; cursor: pointer; transition: color 0.15s; color: var(--text-hint); font-size: 10px; font-weight: 500; gap: 4px; }
+  .nav-item.active { color: var(--green); }
+  .nav-icon { width: 20px; height: 20px; }
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div class="screen active" id="s-landing">
+  <div class="landing">
+    <div class="landing-logo">Day<span>Day</span></div>
+    <div class="landing-tag">Post smarter. Sell faster.</div>
+    <div class="landing-features">
+      <div class="landing-feat"><div class="feat-dot"></div><div class="feat-text">Bulk-post inventory to Facebook Marketplace in seconds</div></div>
+      <div class="landing-feat"><div class="feat-dot"></div><div class="feat-text">Listings look personal — not like a dealership post</div></div>
+      <div class="landing-feat"><div class="feat-dot"></div><div class="feat-text">Emoji phone numbers Facebook can't detect</div></div>
+      <div class="landing-feat"><div class="feat-dot"></div><div class="feat-text">Color-coded inventory — green, orange, red at a glance</div></div>
+      <div class="landing-feat"><div class="feat-dot"></div><div class="feat-text">Auto-flags sold vehicles still live on Facebook</div></div>
+    </div>
+    <button class="landing-btn" onclick="go('s-signup')">Get started free</button>
+    <div class="landing-login">Already have an account? <span onclick="go('s-login')">Sign in</span></div>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div class="screen" id="s-onboard">
+  <div class="app-wrap">
+    <div class="topbar">
+      <div class="logo" onclick="signOut()">Day<span>Day</span></div>
+    </div>
+    <div class="step-indicator">
+      <div class="step-dot active" id="ob0"></div>
+      <div class="step-dot" id="ob1"></div>
+      <div class="step-dot" id="ob2"></div>
+      <span class="step-lbl" id="ob-lbl">Dealership info</span>
+    </div>
+
+    <div id="ob-screen-0">
+      <div class="card">
+        <div class="card-title">Welcome to DayDay</div>
+        <div class="card-sub">Set this up once. We'll remember everything for every posting session.</div>
+        <div class="field"><label>Dealership name</label><input type="text" id="ob-dealer" placeholder="City Auto Mitsubishi"/></div>
+        <div class="field"><label>Sales consultant name</label><input type="text" id="ob-consultant" placeholder="Brendon Mills"/></div>
+        <div class="field">
+          <label>Your contact number</label>
+          <div class="phone-wrap">
+            <div class="field"><input type="tel" id="ob-phone" placeholder="6158573897" oninput="updateEmoji('ob-phone','ob-emoji')"/><div class="helper">Auto-converts to emoji digits on every listing.</div></div>
+            <div class="emoji-box" id="ob-emoji">—</div>
+          </div>
+        </div>
+      </div>
+      <button class="primary-btn" onclick="obStep(1)">Next ›</button>
+    </div>
+
+    <div id="ob-screen-1" style="display:none">
+      <div class="card">
+        <div class="card-title">Preset description</div>
+        <div class="card-sub">This loads pre-filled every posting session. You can edit it any time before hitting post.</div>
+        <div class="field"><label>Your preset</label><textarea id="ob-preset" placeholder="To check availability or schedule a test drive, text or call:&#10;6️⃣1️⃣5️⃣8️⃣5️⃣7️⃣3️⃣8️⃣9️⃣7️⃣"></textarea><div class="helper">Your emoji phone number will be appended automatically if not already included.</div></div>
+      </div>
+      <button class="primary-btn" onclick="obStep(2)">Next ›</button>
+    </div>
+
+    <div id="ob-screen-2" style="display:none">
+      <div class="card">
+        <div class="card-title">Connect your inventory</div>
+        <div class="card-sub">Enter your dealership API key to sync vehicles into DayDay automatically.</div>
+        <div class="field">
+          <label>API key</label>
+          <div class="api-row">
+            <div class="field"><input type="text" id="ob-api" placeholder="8a2e48b6ddc63382d72..."/></div>
+            <button class="test-btn" onclick="testApi('ob-api-status','ob-status-dot','ob-status-txt')">Test</button>
+          </div>
+          <div class="api-status" id="ob-api-status">
+            <div class="status-dot" id="ob-status-dot"></div>
+            <span id="ob-status-txt" style="color:var(--text-hint)">Not connected</span>
+          </div>
+          <div class="helper" style="margin-top:8px">Find your API key in your DMS or dealer management system settings.</div>
+        </div>
+      </div>
+      <button class="primary-btn" onclick="obStep(3)">Finish setup ›</button>
+    </div>
+
+    <div id="ob-screen-3" style="display:none">
+      <div class="success-wrap">
+        <div class="success-circle"><div class="check-circle"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8L6.5 11.5L13 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+        <div class="success-title">You're all set</div>
+        <div class="success-sub">DayDay is ready. Your settings are saved and will pre-load every time you post.</div>
+        <div class="summary-box" id="ob-summary"></div>
+        <button class="primary-btn" onclick="go('s-login')">Start posting ›</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div class="screen" id="s-setup">
+  <div class="app-wrap">
+    <div class="topbar">
+      <div class="logo">Day<span>Day</span></div>
+      <div style="font-size:13px;color:var(--text-secondary)">Setup</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Description type</div>
+      <div class="desc-tabs">
+        <div class="desc-tab active" onclick="setDescTab('preset',this)">Preset</div>
+        <div class="desc-tab" onclick="setDescTab('info',this)">Vehicle info</div>
+        <div class="desc-tab" onclick="setDescTab('ai',this)">AI written <span class="ai-badge">beta</span></div>
+      </div>
+      <div id="tab-preset">
+        <div class="field"><textarea id="setup-desc" placeholder="To check availability or schedule a test drive, text or call:&#10;6️⃣1️⃣5️⃣8️⃣5️⃣7️⃣3️⃣8️⃣9️⃣7️⃣">To check availability or schedule a test drive, text or call:
+6️⃣1️⃣5️⃣8️⃣5️⃣7️⃣3️⃣8️⃣9️⃣7️⃣</textarea><div class="helper">This exact text posts on every listing. Edit anytime before posting.</div></div>
+      </div>
+      <div id="tab-info" style="display:none">
+        <div class="info-preview">Auto-filled per vehicle:<br><span style="color:var(--text)">Price · Mileage · Stock # · Exterior color · Drivetrain · Fuel type</span></div>
+      </div>
+      <div id="tab-ai" style="display:none">
+        <div class="ai-note">AI will write a full engaging post per vehicle. Your emoji phone number will still be appended automatically.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Contact number</div>
+      <div class="phone-wrap" style="margin-top:8px">
+        <div class="field"><input type="tel" id="setup-phone" placeholder="6158573897" value="6158573897" oninput="updateEmoji('setup-phone','setup-emoji')"/><div class="helper">Auto-converts to emoji digits.</div></div>
+        <div class="emoji-box" id="setup-emoji">6️⃣1️⃣5️⃣8️⃣5️⃣7️⃣3️⃣8️⃣9️⃣7️⃣</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Post to</div>
+      <div class="platform-row" style="margin-top:8px">
+        <div class="plat-btn active"><div class="fb-dot"></div>Facebook Marketplace</div>
+      </div>
+    </div>
+    <button class="primary-btn" onclick="go('s-inventory')">Next — load inventory ›</button>
+  </div>
+</div>
+
+<!-- INVENTORY -->
+<div class="screen" id="s-inventory">
+  <div class="app-wrap">
+    <div class="topbar">
+      <div class="logo">Day<span>Day</span></div>
+      <div class="back-btn" onclick="go('s-login')">‹ Setup</div>
+    </div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot" style="background:#639922"></div>Never posted</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#BA7517"></div>Already posted</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#A32D2D"></div>Sold — remove</div>
+    </div>
+    <div class="filter-row">
+      <div class="filt-btn active" onclick="setFilter('all',this)">All</div>
+      <div class="filt-btn" onclick="setFilter('green',this)">Never posted</div>
+      <div class="filt-btn" onclick="setFilter('orange',this)">Posted</div>
+      <div class="filt-btn" onclick="setFilter('red',this)">Needs removal</div>
+    </div>
+    <div class="select-row">
+      <div class="sel-all" onclick="selectAllGreen()">Select all green</div>
+      <div class="sel-count" id="inv-count">0 selected</div>
+    </div>
+    <div class="veh-list" id="inv-list"></div>
+    <div class="sticky">
+      <button class="primary-btn" id="inv-post-btn" disabled onclick="go('s-photos')">Select vehicles to post</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHOTOS -->
+<div class="screen" id="s-photos">
+  <div class="app-wrap">
+    <div class="topbar">
+      <div class="logo">Day<span>Day</span></div>
+      <div class="back-btn" onclick="go('s-inventory')">‹ Inventory</div>
+    </div>
+    <div class="veh-header">
+      <div>
+        <div class="veh-header-title">2019 Tesla Model 3</div>
+        <div class="veh-header-sub">Stock #515498 · 94,174 mi · $19,440</div>
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary)"><span id="photo-count" style="font-weight:500;color:var(--text)">9</span> photos</div>
+    </div>
+    <div class="warn-box" id="photo-warn">
+      <div class="warn-title">Branded photos detected</div>
+      2 photos appear to have dealership watermarks. Review and delete before posting.
+    </div>
+    <div class="section-label">Photos — tap × to remove</div>
+    <div class="photo-grid" id="photo-grid"></div>
+    <button class="primary-btn" onclick="go('s-posting')">Post this vehicle ›</button>
+  </div>
+</div>
+
+<!-- POSTING PROGRESS -->
+<div class="screen" id="s-posting">
+  <div class="app-wrap">
+    <div class="topbar">
+      <div class="logo">Day<span>Day</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="prog-header">
+        <div class="prog-title" id="prog-title">Posting to Facebook...</div>
+        <div class="prog-sub" id="prog-sub">Please keep this window open</div>
+      </div>
+      <div class="prog-bar-wrap"><div class="prog-bar-fill" id="prog-bar" style="width:0%"></div></div>
+      <div class="post-list" id="post-list"></div>
+      <div class="post-done-card" id="post-done" style="display:none">
+        <div class="post-done-title">All vehicles posted successfully</div>
+        <div class="post-done-sub">Listings are now live on Facebook Marketplace</div>
+      </div>
+      <button class="primary-btn" id="done-btn" style="display:none" onclick="go('s-inventory')">Back to inventory ›</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="screen" id="s-settings">
+  <div class="app-wrap">
+    <div class="topbar">
+      <div class="logo">Day<span>Day</span></div>
+      <div style="font-size:13px;color:var(--text-secondary)">Settings</div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">Account</div>
+      <div class="card">
+        <div class="field"><label>Dealership name</label><input type="text" value="City Auto Mitsubishi"/></div>
+        <div class="field"><label>Sales consultant name</label><input type="text" value="Brendon Mills"/></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">Contact number</div>
+      <div class="card">
+        <div class="phone-wrap">
+          <div class="field"><input type="tel" id="set-phone" value="6158573897" oninput="updateEmoji('set-phone','set-emoji')"/><div class="helper">Auto-converts to emoji digits on every listing.</div></div>
+          <div class="emoji-box" id="set-emoji">6️⃣1️⃣5️⃣8️⃣5️⃣7️⃣3️⃣8️⃣9️⃣7️⃣</div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">Preset description</div>
+      <div class="card">
+        <div class="field"><textarea style="min-height:120px">To check availability or schedule a test drive, text or call:
+6️⃣1️⃣5️⃣8️⃣5️⃣7️⃣3️⃣8️⃣9️⃣7️⃣</textarea></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">Inventory connection</div>
+      <div class="card">
+        <div class="field">
+          <label>API key</label>
+          <div class="api-row">
+            <div class="field"><input type="text" value="8a2e48b6ddc63382d72510c75281bb26"/></div>
+            <button class="test-btn" onclick="testApi('set-api-status','set-status-dot','set-status-txt')">Test</button>
+          </div>
+          <div class="api-status" id="set-api-status">
+            <div class="status-dot on" id="set-status-dot"></div>
+            <span id="set-status-txt" style="color:var(--green-dark)">Connected</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;margin-bottom:2rem">
+      <button class="save-btn" onclick="showSaved()">Save changes</button>
+      <span class="saved-toast" id="saved-toast">Saved!</span>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">Danger zone</div>
+      <button class="danger-btn" onclick="signOut()">Sign out</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- SIGNUP -->
+<div class="screen" id="s-signup">
+  <div style="background:#0a0a0a;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem;">
+    <div style="width:100%;max-width:400px;">
+      <div style="font-size:28px;font-weight:600;color:#fff;letter-spacing:-1px;margin-bottom:4px;text-align:center;">Day<span style="color:#1D9E75">Day</span></div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:2rem;">Create your free account</div>
+      <div style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:14px;padding:1.5rem;">
+        <div class="field" style="margin-bottom:12px;">
+          <label style="color:rgba(255,255,255,0.5);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Dealership name</label>
+          <input type="text" id="auth-name" placeholder="City Auto Mitsubishi" style="width:100%;padding:10px 12px;border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:14px;font-family:var(--font);background:rgba(255,255,255,0.08);color:#fff;"/>
+        </div>
+        <div class="field" style="margin-bottom:12px;">
+          <label style="color:rgba(255,255,255,0.5);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">I am a</label>
+          <select id="auth-role" onchange="toggleDealerCode()" style="width:100%;padding:10px 12px;border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:14px;font-family:var(--font);background:rgba(255,255,255,0.08);color:#fff;">
+            <option value="admin">Dealer Admin / Manager</option>
+            <option value="salesperson">Salesperson</option>
+          </select>
+        </div>
+        <div class="field" id="dealer-code-field" style="display:none;margin-bottom:12px;">
+          <label style="color:rgba(255,255,255,0.5);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Dealer code (from your manager)</label>
+          <input type="text" id="auth-dealer-code" placeholder="e.g. CITYAUTO-4829" style="width:100%;padding:10px 12px;border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:14px;font-family:var(--font);background:rgba(255,255,255,0.08);color:#fff;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"/>
+        </div>
+        <div class="field" style="margin-bottom:12px;">
+          <label style="color:rgba(255,255,255,0.5);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Email</label>
+          <input type="email" id="auth-email" placeholder="you@dealership.com" style="width:100%;padding:10px 12px;border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:14px;font-family:var(--font);background:rgba(255,255,255,0.08);color:#fff;"/>
+        </div>
+        <div class="field" style="margin-bottom:16px;">
+          <label style="color:rgba(255,255,255,0.5);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Password</label>
+          <input type="password" id="auth-password" placeholder="Min 6 characters" style="width:100%;padding:10px 12px;border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:14px;font-family:var(--font);background:rgba(255,255,255,0.08);color:#fff;"/>
+        </div>
+        <div id="auth-error" style="display:none;background:#FCEBEB;color:#A32D2D;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:12px;"></div>
+        <button id="signup-btn" onclick="signUp()" style="width:100%;padding:13px;background:#1D9E75;color:white;border:none;border-radius:10px;font-size:15px;font-weight:500;font-family:var(--font);cursor:pointer;">Create account</button>
+      </div>
+      <div style="text-align:center;margin-top:16px;font-size:13px;color:rgba(255,255,255,0.4);">Already have an account? <span style="color:rgba(255,255,255,0.7);cursor:pointer;text-decoration:underline;" onclick="go('s-login')">Sign in</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="screen" id="s-login">
+  <div style="background:#0a0a0a;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem;">
+    <div style="width:100%;max-width:400px;">
+      <div style="font-size:28px;font-weight:600;color:#fff;letter-spacing:-1px;margin-bottom:4px;text-align:center;">Day<span style="color:#1D9E75">Day</span></div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:2rem;">Sign in to your account</div>
+      <div style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:14px;padding:1.5rem;">
+        <div class="field" style="margin-bottom:12px;">
+          <label style="color:rgba(255,255,255,0.5);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Email</label>
+          <input type="email" id="login-email" placeholder="you@dealership.com" style="width:100%;padding:10px 12px;border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:14px;font-family:var(--font);background:rgba(255,255,255,0.08);color:#fff;"/>
+        </div>
+        <div class="field" style="margin-bottom:16px;">
+          <label style="color:rgba(255,255,255,0.5);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:5px;">Password</label>
+          <input type="password" id="login-password" placeholder="Your password" style="width:100%;padding:10px 12px;border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:14px;font-family:var(--font);background:rgba(255,255,255,0.08);color:#fff;"/>
+        </div>
+        <div id="login-error" style="display:none;background:#FCEBEB;color:#A32D2D;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:12px;"></div>
+        <button id="login-btn" onclick="signIn()" style="width:100%;padding:13px;background:#1D9E75;color:white;border:none;border-radius:10px;font-size:15px;font-weight:500;font-family:var(--font);cursor:pointer;">Sign in</button>
+      </div>
+      <div style="text-align:center;margin-top:16px;font-size:13px;color:rgba(255,255,255,0.4);">Don't have an account? <span style="color:rgba(255,255,255,0.7);cursor:pointer;text-decoration:underline;" onclick="go('s-signup')">Create one free</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV BAR (hidden on landing/onboarding) -->
+<div id="nav-bar" style="display:none">
+  <nav class="nav-bar">
+    <div class="nav-item active" id="nav-post" onclick="navTo('s-setup','nav-post')">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="3"/><path d="M7 10h6M10 7v6"/></svg>
+      Post
+    </div>
+    <div class="nav-item" id="nav-inv" onclick="navTo('s-inventory','nav-inv')">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+      Inventory
+    </div>
+    <div class="nav-item" id="nav-set" onclick="navTo('s-settings','nav-set')">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="3"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4"/></svg>
+      Settings
+    </div>
+  </nav>
+</div>
+
+<script>
+const emojiMap={'0':'0️⃣','1':'1️⃣','2':'2️⃣','3':'3️⃣','4':'4️⃣','5':'5️⃣','6':'6️⃣','7':'7️⃣','8':'8️⃣','9':'9️⃣'};
+const noNavScreens=['s-landing','s-onboard','s-signup','s-login'];
+const navScreenMap={'s-setup':'nav-post','s-inventory':'nav-inv','s-photos':'nav-inv','s-posting':'nav-post','s-settings':'nav-set'};
+
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const nav=document.getElementById('nav-bar');
+  if(noNavScreens.includes(id)){nav.style.display='none';}
+  else{nav.style.display='block';}
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(navScreenMap[id]) document.getElementById(navScreenMap[id])?.classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='s-inventory') renderInventory();
+  if(id==='s-photos') renderPhotos();
+  if(id==='s-posting') startPosting();
+}
+
+function navTo(screen, navId) {
+  go(screen);
+}
+
+function updateEmoji(inputId, outputId) {
+  const val=document.getElementById(inputId).value.replace(/\D/g,'');
+  document.getElementById(outputId).textContent=val.split('').map(d=>emojiMap[d]||d).join('')||'—';
+}
+
+// ONBOARDING
+const obLabels=['Dealership info','Preset description','Connect inventory','All done'];
+function obStep(n) {
+  [0,1,2,3].forEach(i=>{
+    const s=document.getElementById('ob-screen-'+i);
+    if(s) s.style.display=i===n?'block':'none';
+    const dot=document.getElementById('ob'+i);
+    if(dot){dot.classList.remove('active','done');if(i<n)dot.classList.add('done');if(i===n)dot.classList.add('active');}
+  });
+  document.getElementById('ob-lbl').textContent=obLabels[n];
+  if(n===3) buildSummary();
+}
+function buildSummary() {
+  // Show dealer code if this was an admin signup
+  if (window._newDealerCode) {
+    document.getElementById('dealer-code-display').style.display = 'block';
+    document.getElementById('dealer-code-value').textContent = window._newDealerCode;
+  }
+  const name=document.getElementById('ob-dealer').value||'Not entered';
+  const con=document.getElementById('ob-consultant').value||'Not entered';
+  const ph=document.getElementById('ob-phone').value||'';
+  const emoji=ph.replace(/\D/g,'').split('').map(d=>emojiMap[d]||d).join('')||'—';
+  document.getElementById('ob-summary').innerHTML=
+    `<div class="sum-row"><span>Dealership</span><span>${name}</span></div>
+     <div class="sum-row"><span>Consultant</span><span>${con}</span></div>
+     <div class="sum-row"><span>Contact</span><span style="font-size:12px">${emoji}</span></div>
+     <div class="sum-row"><span>Preset</span><span>Saved</span></div>
+     <div class="sum-row"><span>Inventory</span><span>Connected</span></div>`;
+}
+function testApi(statusId, dotId, txtId) {
+  document.getElementById(txtId).textContent='Connecting...';
+  document.getElementById(txtId).style.color='var(--text-hint)';
+  setTimeout(()=>{
+    document.getElementById(dotId).classList.add('on');
+    document.getElementById(txtId).textContent='Connected — inventory ready';
+    document.getElementById(txtId).style.color='var(--green-dark)';
+  },1200);
+}
+
+// SETUP
+function setDescTab(type, el) {
+  document.querySelectorAll('.desc-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-preset').style.display=type==='preset'?'block':'none';
+  document.getElementById('tab-info').style.display=type==='info'?'block':'none';
+  document.getElementById('tab-ai').style.display=type==='ai'?'block':'none';
+}
+
+// INVENTORY
+const vehicles=[
+  {id:1,name:'2022 Toyota Corolla',stock:'221043',miles:'39,850',price:'$21,550',status:'green',icon:'🚗'},
+  {id:2,name:'2023 Jeep Wrangler 4xe',stock:'231102',miles:'44,268',price:'$24,770',status:'green',icon:'🚙'},
+  {id:3,name:'2021 Chevrolet Colorado',stock:'215588',miles:'78,744',price:'$17,980',status:'green',icon:'🛻'},
+  {id:4,name:'2026 Mitsubishi Outlander',stock:'260016',miles:'12',price:'$34,608',status:'green',icon:'🚘'},
+  {id:5,name:'2023 GMC Yukon',stock:'233313',miles:'44,268',price:'$51,990',status:'orange',icon:'🚙'},
+  {id:6,name:'2018 Honda Ridgeline',stock:'182384',miles:'49,519',price:'$23,770',status:'orange',icon:'🛻'},
+  {id:7,name:'2019 Honda Passport',stock:'190544',miles:'70,611',price:'$21,092',status:'orange',icon:'🚗'},
+  {id:8,name:'2015 Ford F-350',stock:'153761',miles:'39,542',price:'$27,611',status:'orange',icon:'🛻'},
+  {id:9,name:'2019 Tesla Model 3',stock:'515498',miles:'94,174',price:'$19,440',status:'red',icon:'🚗'},
+  {id:10,name:'2020 Toyota Camry',stock:'207476',miles:'66,069',price:'$21,457',status:'red',icon:'🚗'},
+];
+let selected=new Set();
+let curFilter='all';
+const statusColors={green:'#639922',orange:'#BA7517',red:'#A32D2D'};
+
+function renderInventory(){
+  const filtered=curFilter==='all'?vehicles:vehicles.filter(v=>v.status===curFilter);
+  const list=document.getElementById('inv-list');
+  list.innerHTML=filtered.map(v=>{
+    const sel=selected.has(v.id);
+    const canSel=v.status!=='red';
+    return `<div class="veh-card${sel?' selected':''}${!canSel?' no-select':''}" onclick="${canSel?`toggleSel(${v.id})`:''}">
+      <div class="status-bar" style="background:${statusColors[v.status]}"></div>
+      <div class="thumb">${v.icon}</div>
+      <div class="veh-info">
+        <div class="veh-name">${v.name}</div>
+        <div class="veh-meta">Stock #${v.stock}</div>
+        ${v.status==='red'?'<span class="red-tag">No longer in inventory</span>':''}
+        ${v.status==='orange'?'<span class="orange-tag">Already posted</span>':''}
+      </div>
+      <div class="veh-right">
+        <div class="veh-price">${v.price}</div>
+        <div class="veh-miles">${v.miles} mi</div>
+      </div>
+      ${canSel?`<div class="chk${sel?' on':''}"><span class="chk-mark">✓</span></div>`:'<div style="width:20px"></div>'}
+    </div>`;
+  }).join('');
+  updateInvCount();
+}
+
+function toggleSel(id){
+  if(selected.has(id)) selected.delete(id); else selected.add(id);
+  renderInventory();
+}
+function selectAllGreen(){
+  const ids=vehicles.filter(v=>v.status==='green').map(v=>v.id);
+  const allOn=ids.every(id=>selected.has(id));
+  if(allOn) ids.forEach(id=>selected.delete(id)); else ids.forEach(id=>selected.add(id));
+  renderInventory();
+}
+function setFilter(f,el){
+  curFilter=f;
+  document.querySelectorAll('.filt-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderInventory();
+}
+function updateInvCount(){
+  const n=selected.size;
+  document.getElementById('inv-count').textContent=n===0?'0 selected':`${n} vehicle${n>1?'s':''} selected`;
+  const btn=document.getElementById('inv-post-btn');
+  btn.disabled=n===0;
+  btn.textContent=n===0?'Select vehicles to post':`Review photos & post ${n} vehicle${n>1?'s':''}`;
+}
+
+// PHOTOS
+const photos=[
+  {id:'ph1',type:'natural',flagged:false,icon:'🚗',cover:true},
+  {id:'ph2',type:'natural',flagged:false,icon:'🚗'},
+  {id:'ph3',type:'natural',flagged:false,icon:'🚗'},
+  {id:'ph4',type:'branded',flagged:true,icon:'🏢'},
+  {id:'ph5',type:'natural',flagged:false,icon:'🚗'},
+  {id:'ph6',type:'natural',flagged:false,icon:'🚗'},
+  {id:'ph7',type:'branded',flagged:true,icon:'🏢'},
+  {id:'ph8',type:'natural',flagged:false,icon:'🚗'},
+  {id:'ph9',type:'natural',flagged:false,icon:'🚗'},
+];
+let deletedPhotos=new Set();
+
+function renderPhotos(){
+  deletedPhotos=new Set();
+  const grid=document.getElementById('photo-grid');
+  grid.innerHTML=photos.map(p=>`
+    <div class="photo-card${p.flagged?' bad':''}" id="${p.id}">
+      <div class="photo-inner ${p.type}">${p.icon}</div>
+      ${p.cover?'<div class="badge-cover">Cover</div>':''}
+      <div class="photo-badge ${p.flagged?'badge-flag':'badge-clean'}">${p.flagged?'Watermark':'Clean'}</div>
+      <button class="del-btn" onclick="deletePhoto('${p.id}')">×</button>
+    </div>`).join('')+
+    `<div class="upload-tile"><div class="upload-plus">+</div><div class="upload-lbl">Add photo</div></div>`;
+  updatePhotoCount();
+}
+
+function deletePhoto(id){
+  document.getElementById(id).style.display='none';
+  deletedPhotos.add(id);
+  updatePhotoCount();
+  const flaggedLeft=photos.filter(p=>p.flagged&&!deletedPhotos.has(p.id)).length;
+  document.getElementById('photo-warn').style.display=flaggedLeft>0?'block':'none';
+}
+function updatePhotoCount(){
+  const n=photos.length-deletedPhotos.size;
+  document.getElementById('photo-count').textContent=n;
+}
+
+// POSTING PROGRESS
+const postingVehicles=[
+  {name:'2022 Toyota Corolla'},
+  {name:'2023 Jeep Wrangler 4xe'},
+  {name:'2021 Chevrolet Colorado'},
+  {name:'2026 Mitsubishi Outlander'},
+];
+function startPosting(){
+  const list=document.getElementById('post-list');
+  document.getElementById('prog-bar').style.width='0%';
+  document.getElementById('prog-title').textContent='Posting to Facebook...';
+  document.getElementById('prog-sub').textContent='Please keep this window open';
+  document.getElementById('post-done').style.display='none';
+  document.getElementById('done-btn').style.display='none';
+  list.innerHTML=postingVehicles.map((v,i)=>`
+    <div class="post-item" id="pi-${i}">
+      <div class="post-status-icon pending" id="pi-icon-${i}"></div>
+      <div class="post-item-name">${v.name}</div>
+      <div class="post-item-status" id="pi-status-${i}">Waiting...</div>
+    </div>`).join('');
+  let i=0;
+  function postNext(){
+    if(i>=postingVehicles.length){
+      document.getElementById('prog-bar').style.width='100%';
+      document.getElementById('prog-title').textContent='All done!';
+      document.getElementById('prog-sub').textContent=`${postingVehicles.length} vehicles posted successfully`;
+      document.getElementById('post-done').style.display='block';
+      document.getElementById('done-btn').style.display='block';
+      return;
+    }
+    document.getElementById(`pi-icon-${i}`).className='post-status-icon posting';
+    document.getElementById(`pi-status-${i}`).textContent='Posting...';
+    document.getElementById(`pi-status-${i}`).className='post-item-status posting';
+    const pct=Math.round(((i+0.5)/postingVehicles.length)*100);
+    document.getElementById('prog-bar').style.width=pct+'%';
+    setTimeout(()=>{
+      document.getElementById(`pi-icon-${i}`).className='post-status-icon done';
+      document.getElementById(`pi-icon-${i}`).innerHTML='<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7L5.5 10L11.5 4" stroke="#0F6E56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      document.getElementById(`pi-status-${i}`).textContent='Posted';
+      document.getElementById(`pi-status-${i}`).className='post-item-status done';
+      i++;
+      setTimeout(postNext, 600);
+    }, 1800);
+  }
+  setTimeout(postNext, 500);
+}
+
+// SETTINGS
+function showSaved(){
+  const t=document.getElementById('saved-toast');
+  t.style.display='inline';
+  setTimeout(()=>t.style.display='none',2000);
+}
+
+renderInventory();
+
+// SUPABASE AUTH
+const SUPABASE_URL = 'https://ltnjgxjvimtxwwukbnsb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_rbkxYgPmw3gvL-rJ0enkOQ_8AoNgdv8';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Add .from() helper for database operations
+if (!sb.from) {
+  sb.from = (table) => ({
+    insert: async (data) => {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (await sb.auth.getSession()).data?.session?.access_token, 'Prefer': 'return=minimal' },
+        body: JSON.stringify(data)
+      });
+      return { error: res.ok ? null : await res.json() };
+    },
+    upsert: async (data) => {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (await sb.auth.getSession()).data?.session?.access_token, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify(data)
+      });
+      return { error: res.ok ? null : await res.json() };
+    },
+    select: (cols) => ({
+      eq: (col, val) => ({
+        single: async () => {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${col}=eq.${val}&select=${cols}`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (await sb.auth.getSession()).data?.session?.access_token, 'Accept': 'application/vnd.pgrst.object+json' }
+          });
+          const json = await res.json();
+          return res.ok ? { data: json, error: null } : { data: null, error: json };
+        }
+      })
+    })
+  });
+}
+
+let currentUser = null;
+
+async function checkAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    go('s-setup');
+  }
+}
+
+function toggleDealerCode() {
+  const role = document.getElementById('auth-role').value;
+  document.getElementById('dealer-code-field').style.display = role === 'salesperson' ? 'block' : 'none';
+}
+
+function generateDealerCode(name) {
+  const prefix = name.replace(/[^a-zA-Z]/g, '').toUpperCase().substring(0, 8);
+  const suffix = Math.floor(1000 + Math.random() * 9000);
+  return `${prefix}-${suffix}`;
+}
+
+async function signUp() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const name = document.getElementById('auth-name').value.trim();
+  const role = document.getElementById('auth-role').value;
+  const dealerCode = document.getElementById('auth-dealer-code') ? document.getElementById('auth-dealer-code').value.trim() : '';
+
+  if (!email || !password || !name) { showAuthError('Please fill in all fields'); return; }
+  if (password.length < 8) { showAuthError('Password must be at least 8 characters'); return; }
+  if (role === 'salesperson' && !dealerCode) { showAuthError('Please enter your dealer code from your manager'); return; }
+
+  showAuthLoading(true);
+
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { dealership_name: name, role } } });
+  showAuthLoading(false);
+  if (error) { showAuthError(error.message); return; }
+  currentUser = data.user;
+
+  if (role === 'admin') {
+    // Create dealership record with auto-generated code
+    const code = generateDealerCode(name);
+    const { error: dealErr } = await sb.from('dealerships').insert({
+      owner_id: currentUser.id,
+      dealer_name: name,
+      dealer_code: code,
+      inventory_url: 'https://dayday-server-production.up.railway.app/inventory'
+    });
+    if (dealErr) console.error('Dealership creation error:', dealErr);
+    // Store dealer code to show on success screen
+    window._newDealerCode = code;
+  } else {
+    // Salesperson — look up dealership by code and link
+    const { data: dealData, error: dealErr } = await sb.from('dealerships').select('id').eq('dealer_code', dealerCode).single();
+    if (dealErr || !dealData) { showAuthError('Dealer code not found — check with your manager'); return; }
+    const { error: settingsErr } = await sb.from('dealer_settings').upsert({
+      user_id: currentUser.id,
+      dealership_id: dealData.id,
+      role: 'salesperson'
+    });
+    if (settingsErr) console.error('Settings error:', settingsErr);
+  }
+
+  go('s-onboard');
+}
+
+async function signIn() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) { showLoginError('Please enter your email and password'); return; }
+  showLoginLoading(true);
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  showLoginLoading(false);
+  if (error) { showLoginError('Invalid email or password'); return; }
+  currentUser = data.user;
+  go('s-setup');
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  currentUser = null;
+  go('s-landing');
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function showAuthLoading(on) {
+  document.getElementById('signup-btn').textContent = on ? 'Creating account...' : 'Create account';
+  document.getElementById('signup-btn').disabled = on;
+}
+function showLoginLoading(on) {
+  document.getElementById('login-btn').textContent = on ? 'Signing in...' : 'Sign in';
+  document.getElementById('login-btn').disabled = on;
+}
+
+checkAuth();
+
+</script>
+</body>
+</html>
